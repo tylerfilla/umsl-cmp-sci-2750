@@ -1,0 +1,55 @@
+#!/bin/bash
+
+# Get list of files from arguments
+FILES=$@
+
+# If no args provided, default to current directory
+if [ $# -eq 0 ]; then
+    FILES=.
+fi
+
+# Primary function for this assignment (takes in one file)
+function doTheThing {
+    # Given file
+    local file=$1
+
+    # Handle file based on its type
+    if [ -f $file -a ! -h $file  ]; then
+        # File is regular and not a symlink
+
+        # Get file size
+        local size=`du -bs $file | awk '{ print $1 }'`
+
+        # Get description of file
+        local desc=`file $file | awk -F: '{ print $2 }' | cut -c 2-`
+
+        # Print file name, size, and description
+        echo $file $size $desc
+    elif [ -h $file ]; then
+        # File is a symbolic link
+
+        # Get link target (add -f to have readlink specify path, but instructions didn't specify that)
+        local target=`readlink $file`
+
+        # Print link name and the name of its target
+        echo $file "symbolic link" $target
+    elif [ -d $file ]; then
+        # File is a directory
+
+        # Handle each child recursively (instructions don't specify to do anything with the directory itself)
+        for child in `ls $file`; do
+            doTheThing "$file/$child"
+        done
+    else
+        # File is something else
+
+        # Print generic info
+        echo $file "unknown"
+    fi
+}
+
+# Run the primary function on each file given
+for file in $FILES; do
+    doTheThing $file
+done
+
